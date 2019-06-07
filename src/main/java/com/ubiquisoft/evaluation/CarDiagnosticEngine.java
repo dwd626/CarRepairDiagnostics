@@ -9,6 +9,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.Set;
 
 public class CarDiagnosticEngine {
 
@@ -39,7 +41,49 @@ public class CarDiagnosticEngine {
 		 * console output is as least as informative as the provided methods.
 		 */
 
+		// step 1: Validate the 3 data fields are present
+		if (car == null) {
+			System.out.println("Car data is incomplete. Must have Year, Make, Model info.");
+			return;
+		}
+		StringBuilder strb = new StringBuilder("The following data are missing: ");
+		boolean isValidateData = true;
+		if (car.getYear() == null) {
+			strb.append(" YEAR");
+			isValidateData = false;
+		}
+		if (car.getMake() == null) {
+			strb.append(" MAKE");
+			isValidateData = false;
+		}
+		if (car.getModel() == null) {
+			strb.append(" MODEL");
+			isValidateData = false;
+		}
+		if (!isValidateData) {
+			System.out.println(strb.toString());
+			return;
+		}
 
+		// step 2: Validate that no parts are missing
+		Map<PartType, Integer> missingParts = car.getMissingPartsMap();
+		if (missingParts != null && missingParts.size() > 0) {
+			for (Map.Entry<PartType, Integer> entry : missingParts.entrySet()) {
+				printMissingPart(entry.getKey(), entry.getValue());
+			}
+			return;
+		}
+
+		// step 3: Validate that all parts are in working condition
+		Map<PartType, ConditionType> nonWorkingParts = car.getNonWorkingConditionMap();
+		if (nonWorkingParts != null && nonWorkingParts.size() > 0) {
+			for (Map.Entry<PartType, ConditionType> entry : nonWorkingParts.entrySet()) {
+				printDamagedPart(entry.getKey(), entry.getValue());
+			}
+			return;
+		}
+
+		System.out.println("Validation is successful. Your car is ready to hit the road");
 	}
 
 	private void printMissingPart(PartType partType, Integer count) {

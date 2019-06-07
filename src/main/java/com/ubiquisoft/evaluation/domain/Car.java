@@ -3,6 +3,8 @@ package com.ubiquisoft.evaluation.domain;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +17,7 @@ public class Car {
 	private String model;
 
 	private List<Part> parts;
+
 
 	public Map<PartType, Integer> getMissingPartsMap() {
 		/*
@@ -31,7 +34,58 @@ public class Car {
 		 *      }
 		 */
 
-		return null;
+		// Initialize the required parts. This should be passed in as a configuration since the requirement can change.
+		HashMap<PartType, Integer> requiredParts = new HashMap<PartType, Integer>();
+		requiredParts.put(PartType.ENGINE, new Integer(1));
+		requiredParts.put(PartType.ELECTRICAL, new Integer(1));
+		requiredParts.put(PartType.FUEL_FILTER, new Integer(1));
+		requiredParts.put(PartType.OIL_FILTER, new Integer(1));
+		requiredParts.put(PartType.TIRE, new Integer(4));
+
+		// ENGINE, ELECTRICAL, TIRE, FUEL_FILTER, OIL_FILTER;
+		Iterator<Part> itParts = parts.iterator();
+		while (itParts.hasNext()) {
+			Part prt = (Part) itParts.next();
+			PartType prtType = prt.getType();
+			if (prtType != null) {
+				Integer count = (Integer) requiredParts.get(prtType);
+				if ( count > 1 ) {
+					requiredParts.put(prtType, count - 1);
+				} else if (count == 1) {
+					requiredParts.remove(prtType);
+				}
+			}
+		}
+		return requiredParts;
+	}
+
+	public boolean isAllPartsWorkingCondition() {
+		if (parts == null) {
+			return true;
+		}
+		Iterator<Part> itParts = parts.iterator();
+		while (itParts.hasNext()) {
+			Part prt = (Part) itParts.next();
+			if (prt == null || !prt.isInWorkingCondition()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public Map<PartType, ConditionType> getNonWorkingConditionMap() {
+		if (parts == null) {
+			return null;
+		}
+		HashMap<PartType, ConditionType> workingConditionMap = new HashMap<PartType, ConditionType>();
+		Iterator<Part> itParts = parts.iterator();
+		while (itParts.hasNext()) {
+			Part prt = (Part) itParts.next();
+			if (prt != null && !prt.isInWorkingCondition()) {
+				workingConditionMap.put(prt.getType(), prt.getCondition());
+			}
+		}
+		return workingConditionMap;
 	}
 
 	@Override
